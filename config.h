@@ -8,31 +8,42 @@ static const int topbar             = 1;		/* 0 means bottom bar */
 static const int user_bh            = 30;       /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
 static const unsigned int gappih    = 10;       /* horiz inner gap between windows */
 static const unsigned int gappiv    = 10;       /* vert inner gap between windows */
-static const unsigned int gappoh    = 10;       /* horiz outer gap between windows and screen edge */
-static const unsigned int gappov    = 10;       /* vert outer gap between windows and screen edge */
+static const unsigned int gappoh    = 20;       /* horiz outer gap between windows and screen edge */
+static const unsigned int gappov    = 20;       /* vert outer gap between windows and screen edge */
 static int smartgaps                = 0;        /* 1 means no outer gap when there is only one window */
 static const int decorhints			= 1;	   /* 1 means respect decoration hints */
 
 static const char *fonts[]          = { "Hack Nerd Font:size=11:style=Bold" };  /*{ "monospace:size=10" };*/
 static const char dmenufont[]       = "Source Code Pro:size=11:style=Bold"; /*"monospace:size=10";*/
-static const int vertpad            = 10;       /* vertical padding of bar */
-static const int sidepad            = 10;       /* horizontal padding of bar */
+static const int vertpad            = 0;       /* vertical padding of bar */
+static const int sidepad            = 0;       /* horizontal padding of bar */
 
-#define red "#f28fad"
-#define orange "#f8bd96"
-#define yellow "#fae3b0"
-#define green "#abe9b3"
-#define cyan "#89dceb"
-#define blue "#7aa2f7"
-#define purple "#f5c2e7"
-#define white "#d9e0ee"
-#define cream "#c3bac6"
-#define indigo "#575268"
-#define dark "#302d41"
-//#define black "#1a1823"
-#define black "#000000"
+//#define red "#f28fad"
+//#define orange "#f8bd96"
+//#define yellow "#fae3b0"
+//#define green "#abe9b3"
+//#define cyan "#89dceb"
+//#define blue "#7aa2f7"
+//#define purple "#f5c2e7"
+//#define white "#d9e0ee"
+//#define cream "#c3bac6"
+//#define indigo "#575268"
+//#define dark "#302d41"
+////#define black "#1a1823"
+//#define black "#000000"
 
-static const char color1[] = blue;
+#define pink "#f5c2e7"
+#define mauve "#cba6f7"
+#define red "#f38ba8"
+#define orange "#fab387"
+#define yellow "#f9e2af"
+#define blue "#89b4fa"
+#define lavender "#b4befe"
+#define white "#cdd6f4"
+#define dark "#1e1e2e"
+#define black "#11111b"
+
+static const char color1[] = lavender;
 static const char color2[] = black;
 
 static const char *colors[][3]      = {
@@ -48,11 +59,22 @@ static const char *const autostart[] = {
     "xfce-power-manager", NULL,
     "nitrogen", "--restore", NULL,
     "sh", "-c", "~/projects/dwm/stats.sh", "&", "disown", NULL,
+    "sh", "-c", "~/projects/dwm/wttr.sh", "&", "disown", NULL,
+    "lxsession", NULL,
+    "/usr/lib/xdg-desktop-portal-gtk", NULL,
 	NULL /* terminate */
 };
 
 /* tagging */
-static const char *tags[] = { "", "󰍳", "󰇥", "󱢢", "", "", "", "", "" };
+static const char *tags[] = { "󰊠", "󰍳", "󰇥", "󰮯", "", "󱢢", "", "", "" };
+static const char *single_tag_icon = "";
+//static const char *single_tag_icon = "";
+//static const char *single_tag_icon = "󰍳";
+//static const char *single_tag_icon = "󰊠";
+static const int use_single_tag_icon = 1;
+
+static const char *floating_icon = "";
+static const char *start_button_text = "󰣇 Nya";
 
 static const Rule rules[] = {
 	/* xprop(1):
@@ -68,7 +90,7 @@ static const Rule rules[] = {
 /* layout(s) */
 static const float mfact     = 0.5; /* factor of master area size [0.05..0.95] */
 static const int nmaster     = 1;    /* number of clients in master area */
-static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
+static const int resizehints = 0;    /* 1 means respect size hints in tiled resizals */
 static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
 
 #define FORCE_VSPLIT 1  /* nrowgrid layout: force two clients to always split vertically */
@@ -77,7 +99,7 @@ static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen win
 
 static const Layout layouts[] = {
 	/* symbol     arrange function */
-	{ " ",      tile },    /* first entry is default */
+	{ "",      tile },    /* first entry is default */
 	{ "󰧱",      NULL },    /* no layout function means floating behavior */
 	//{ "[M]",      monocle },
 };
@@ -113,8 +135,8 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_Left,   focusstack,     {.i = -1 } },
 	{ MODKEY|ShiftMask,	            XK_Left,   incnmaster,     {.i = +1 } },
 	{ MODKEY|ShiftMask,	            XK_Right,  incnmaster,     {.i = -1 } },
-	{ MODKEY|ControlMask,           XK_Left,   setmfact,       {.f = -0.05} },
-	{ MODKEY|ControlMask,           XK_Right,  setmfact,       {.f = +0.05} },
+	{ MODKEY|ControlMask,           XK_Left,   setmfact,       {.f = -0.01} },
+	{ MODKEY|ControlMask,           XK_Right,  setmfact,       {.f = +0.01} },
 	{ MODKEY|ShiftMask,             XK_Up,	   zoom,           {0} },
 	{ MODKEY,                       XK_Tab,    view,           {0} },
 	{ MODKEY,						XK_q,      killclient,     {0} },
@@ -147,7 +169,8 @@ static const Key keys[] = {
 	{0,								XF86XK_AudioLowerVolume, spawn,		   SHCMD("amixer -q sset Master 5%-") },
 	{0,								XF86XK_AudioRaiseVolume, spawn,		   SHCMD("amixer -q sset Master 5%+") },
 	{0,								XF86XK_AudioMute,		 spawn,		   SHCMD("amixer -q sset Master toggle") },
-	{ MODKEY,						XK_Print,				 spawn,		   SHCMD("flameshot full -p ~/Pictures/screenshots") },
+	{0,						        XK_Print,				 spawn,		   SHCMD("flameshot full -p ~/Pictures/screenshots") },
+	{ MODKEY,						XK_Print,				 spawn,		   SHCMD("flameshot launcher") },
 	{ MODKEY,						XK_t,					 spawn,		   SHCMD("$HOME/dwm/trayer.sh") },
 	{0,								XF86XK_MonBrightnessDown,spawn,		   SHCMD("brightnessctl set 5%-") },	
 	{0,								XF86XK_MonBrightnessUp,  spawn,		   SHCMD("brightnessctl set +5%") },	

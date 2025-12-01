@@ -1,3 +1,3 @@
 ## My build of DWM
 
-![](ss.png)
+![](ss2.png)

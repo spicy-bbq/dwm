@@ -40,6 +40,7 @@
 #include <X11/extensions/Xinerama.h>
 #endif /* XINERAMA */
 #include <X11/Xft/Xft.h>
+#include <string.h>
 
 #include "drw.h"
 #include "util.h"
@@ -141,6 +142,7 @@ struct Monitor {
 	Client *stack;
 	Monitor *next;
 	Window barwin;
+    Window testwin;
 	const Layout *lt[2];
 };
 
@@ -283,6 +285,7 @@ static Display *dpy;
 static Drw *drw;
 static Monitor *mons, *selmon;
 static Window root, wmcheckwin;
+static char *tag_text;
 
 /* configuration, allows nested code to access above variables */
 #include "config.h"
@@ -476,19 +479,20 @@ buttonpress(XEvent *e)
 		focus(NULL);
 	}
 	if (ev->window == selmon->barwin) {
-		i = x = 0;
-		do
-			x += TEXTW(tags[i]);
-		while (ev->x >= x && ++i < LENGTH(tags));
-		if (i < LENGTH(tags)) {
-			click = ClkTagBar;
-			arg.ui = 1 << i;
-		} else if (ev->x < x + TEXTW(selmon->ltsymbol))
-			click = ClkLtSymbol;
-		else if (ev->x > selmon->ww - (int)TEXTW(stext))
-			click = ClkStatusText;
-		else
-			click = ClkWinTitle;
+		//i = x = 0;
+		//i = x = TEXTW(start_button_text);
+		//do
+		//	x += TEXTW(tags[i]);
+		//while (ev->x >= x && ++i < LENGTH(tags));
+		//if (i < LENGTH(tags)) {
+		//	click = ClkTagBar;
+		//	arg.ui = 1 << i;
+		//} else if (ev->x < x + TEXTW(selmon->ltsymbol))
+		//	click = ClkLtSymbol;
+		//else if (ev->x > selmon->ww - (int)TEXTW(stext))
+		//	click = ClkStatusText;
+		//else
+		//    click = ClkWinTitle;
 	} else if ((c = wintoclient(ev->window))) {
 		focus(c);
 		restack(selmon);
@@ -767,29 +771,54 @@ drawbar(Monitor *m)
 		if (c->isurgent)
 			urg |= c->tags;
 	}
-	x = 0;
+	//x = 0;
+    drw_setscheme(drw, scheme[SchemeNorm]);
+	x = drw_text(drw, 0, 0, TEXTW(start_button_text), bh, lrpad / 2, start_button_text, 0);
 	for (i = 0; i < LENGTH(tags); i++) {
-		w = TEXTW(tags[i]);
-		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
-		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
+        if(use_single_tag_icon == 1) {
+            w = TEXTW(single_tag_icon) + 3;
+            tag_text = single_tag_icon;
+        }
+        else {
+    		w = TEXTW(tags[i]) + 3;
+            tag_text = tags[i];
+        }
+		//drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
+		drw_setscheme(drw, scheme[SchemeNorm]);
+		drw_text(drw, x, 0, w, bh, lrpad / 2, tag_text, urg & 1 << i);
 		if (occ & 1 << i)
-			drw_rect(drw, x + boxs, boxs, boxw, boxw,
-				m == selmon && selmon->sel && selmon->sel->tags & 1 << i,
-				urg & 1 << i);
+			//drw_rect(drw, x, 0, w, 3, 1, 0);
+			drw_rect(drw, x + w / 2 - 3, bh - bh / 8, 6, 3, 1, 0);
+        if(m->tagset[m->seltags] & 1 << i) {
+            //drw_rect(drw, x , bh - bh / 8, w, bh, 1, 0);
+            drw_rect(drw, x + 3 , bh - bh / 8, w - 6, bh, 1, 0);
+        }
 		x += w;
 	}
-	w = TEXTW(m->ltsymbol);
-	drw_setscheme(drw, scheme[SchemeNorm]);
-	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
+
+	//w = TEXTW(m->ltsymbol);
+	//drw_setscheme(drw, scheme[SchemeNorm]);
+	//x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
+
+    if(m->sel) {
+        //x = drw_text(drw, x, 0, w, bh, lrpad / 2, "|", 0) - 5;
+        drw_rect(drw, x + w / 4, 8, 3, bh - 16, 1, 0);
+        x += w / 2;
+
+        if(m->sel->isfloating) {
+            x = drw_text(drw, x, 0, w, bh, lrpad / 2, floating_icon, 0);
+        }
+    }
 
 	if ((w = m->ww - tw - x) > bh) {
+		drw_setscheme(drw, scheme[SchemeNorm]);
 		if (m->sel) {
-			drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
-            drw_text(drw, x, 0, w - 2 * sp, bh, lrpad / 2, m->sel->name, 0);
-			if (m->sel->isfloating)
-				drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
+			//drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
+            drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0);
+			//if (m->sel->isfloating)
+			//	drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
 		} else {
-			drw_setscheme(drw, scheme[SchemeNorm]);
+			//drw_setscheme(drw, scheme[SchemeNorm]);
             drw_rect(drw, x, 0, w - 2 * sp, bh, 1, 1);
 		}
 	}
@@ -1579,8 +1608,9 @@ setlayout(const Arg *arg)
 	strncpy(selmon->ltsymbol, selmon->lt[selmon->sellt]->symbol, sizeof selmon->ltsymbol);
 	if (selmon->sel)
 		arrange(selmon);
-	else
+	else {
 		drawbar(selmon);
+    }
 }
 
 void
